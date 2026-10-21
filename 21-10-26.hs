@@ -1,4 +1,4 @@
-import Data.Char (toUpper)
+import Data.Char (toUpper, ord, chr)
 import Data.List (sortBy)
 import Data.Bits (Bits(xor))
 import Prelude hiding ((.))
@@ -174,5 +174,21 @@ foo = map (*10) . filter even
 bar :: [Int] -> Int
 bar = foldr (+) 0 . map (+1) . filter odd
 
+
+fairs :: [Int] -> [Int]
+fairs = map (2*) . filter (>=2)
+
+-- >>> fairs [1,2,3,4,5]
+-- [4,6,8,10]
+
+idFilter :: [Int] -> [Bool]
+idFilter xs = filter id (map even xs)
+
+encode :: [Char] -> Int -> [Char] 
+encode [] _ = []
+encode xs n = [chr $ ((ord x + n) `mod` 255) | x <- xs ]
+
+-- >>> print (encode "abc" 3)
+-- "cde"
 
 main = do print "hi"
