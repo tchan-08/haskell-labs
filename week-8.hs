@@ -1,4 +1,5 @@
 import Data.Char(toUpper)
+import Distribution.Simple.Command (OptDescr(BoolOpt))
 main :: IO()
 
 -- 1.1a
@@ -142,5 +143,77 @@ fmap' f (MkParser p) = MkParser (\ts -> map (\(x, ts') -> (f x, ts')) (p ts))
 infixl 3 <||>
 (<||>) :: Parser a -> Parser a -> Parser a
 (MkParser px) <||> (MkParser py) = MkParser (\ts -> px ts ++ py ts)
+
+satisfy :: (Char -> Bool) -> Parser Char
+satisfy p = MkParser (\ts -> case ts of
+    (x:xs) -> if p x then [(x, xs)] else []
+    [] -> []
+    )
+
+-- >>> parse (satisfy (\x -> x == 'a')) "a"
+-- [('a',"")]
+
+-- 3.2
+
+char :: Char -> Parser Char
+char c = satisfy (\x -> x == c)
+
+-- >>> parse (char 'a') "aaaaa"
+-- [('a',"aaaa")]
+
+-- 3.3
+
+boolP :: Parser Bool
+boolP = MkParser (\ts -> case ts of
+    (x:xs) -> case x of
+        't' -> [(True,xs)]
+        'f' -> [(False, xs)]
+        _ -> []
+    [] -> [])
+
+-- >>> parse boolP "t blah blah"
+-- [(True," blah blah")]
+
+-- 3.4
+
+oneOf :: [Char] -> Parser Char
+oneOf chars =  MkParser (\ts -> case ts of
+    [] -> []
+    (x:xs) -> if contains x chars then [(x,xs)] else [])
+    where
+        contains :: Char -> [Char] -> Bool
+        contains _ [] = False
+        contains c (x:xs) = if x == c then True else contains c xs
+
+-- >>> parse (oneOf ['a', 'b', 'c']) "ahhhh"
+-- [('a',"hhhh")]
+
+-- 3.5
+
+noneOf :: [Char] -> Parser Char
+noneOf chars = MkParser (\ts -> case ts of
+    [] -> []
+    (x:xs) -> if notIn x chars then [(x,xs)] else [])
+    where
+        notIn :: Char -> [Char] -> Bool
+        notIn _ [] = True
+        notIn c (x:xs) = if x == c then False else notIn c xs
+
+-- >>> parse (noneOf ['a', 'b', 'c']) "ahhhh"
+-- []
+
+-- 3.6a
+
+empty :: Parser a
+empty = MkParser (\_ -> [])
+
+-- >>> parse empty "abc"
+-- []
+
+-- 3.6b
+
+choices :: [Parser a] -> Parser a
+choices [] = empty
+choices (x:xs) = x <||> choices xs
 
 main = do print "hi"
